@@ -10,6 +10,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "three": "^0.180.0"
-  }
+    "three": "^0.180.0",
+    "y": "^0.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TijanaAvr/ComputerGraphics.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TijanaAvr/ComputerGraphics/issues"
+  },
+  "homepage": "https://github.com/TijanaAvr/ComputerGraphics#readme"
 }
