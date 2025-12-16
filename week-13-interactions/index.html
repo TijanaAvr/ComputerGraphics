@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Three.js Cube Interaction</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+    #infoPanel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      min-width: 220px;
+    }
+  </style>
+</head>
+<body>
+  <div id="infoPanel">Click a cube to see its information here.</div>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+  <script>
+    // Scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.z = 50;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Lighting
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(10, 10, 10);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
+
+    // Create cubes
+    const cubes = [];
+    for (let i = 0; i < 20; i++) {
+      const width = Math.random() * 4 + 2;
+      const height = Math.random() * 4 + 2;
+      const depth = Math.random() * 4 + 2;
+      const geometry = new THREE.BoxGeometry(width, height, depth);
+      const color = new THREE.Color(Math.random(), Math.random(), Math.random());
+      const material = new THREE.MeshPhongMaterial({ color });
+      const cube = new THREE.Mesh(geometry, material);
+
+      cube.position.set(
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 50
+      );
+
+      cube.userData = { width, height, depth, originalColor: color.clone() }; // store original color
+      scene.add(cube);
+      cubes.push(cube);
+    }
+
+    // Raycaster
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let selectedCube = null;
+    const infoPanel = document.getElementById('infoPanel');
+
+    function onMouseClick(event) {
+      // Normalize mouse coordinates
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(cubes);
+
+      if (intersects.length > 0) {
+        const cube = intersects[0].object;
+
+        // Reset previous cube color
+        if (selectedCube && selectedCube !== cube) {
+          selectedCube.material.color.copy(selectedCube.userData.originalColor);
+        }
+
+        selectedCube = cube;
+
+        // Highlight selected cube
+        cube.material.color.set(0xff0000);
+
+        // Update info panel
+        const { x, y, z } = cube.position;
+        const { width, height, depth } = cube.userData;
+        infoPanel.innerHTML = `
+          <b>Cube Information:</b><br>
+          Position: (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})<br>
+          Size: ${width.toFixed(2)} x ${height.toFixed(2)} x ${depth.toFixed(2)}
+        `;
+
+        // Optional animation: scale up briefly
+        cube.scale.set(1.2, 1.2, 1.2);
+        setTimeout(() => cube.scale.set(1, 1, 1), 200);
+
+      } else {
+        // Clicked empty space
+        if (selectedCube) {
+          selectedCube.material.color.copy(selectedCube.userData.originalColor);
+          selectedCube = null;
+        }
+        infoPanel.innerHTML = "No object selected";
+      }
+    }
+
+    window.addEventListener('click', onMouseClick);
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
